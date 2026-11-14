@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#142e49">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="WayFinder">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>WayFinder</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172638;background:#f3f6fa}
+    *{box-sizing:border-box} body{margin:0} header{background:#142e49;color:white;padding:24px 20px 22px;border-radius:0 0 24px 24px}
+    .brand{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;border-radius:14px;background:#2c5577;display:grid;place-items:center;font-size:24px}
+    h1{font-size:25px;margin:0} header p{margin:4px 0 0;color:#d6e4f1;font-size:13px}
+    main{max-width:620px;margin:0 auto;padding:20px 16px 40px}.card{background:white;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 3px 14px #142e4910}
+    label{font-weight:650;font-size:13px;display:block;margin:14px 0 7px}select,button{font:inherit;width:100%;border-radius:12px;padding:14px;border:1px solid #d4dde7;background:white;color:#172638}
+    button{border:0;background:#1767ad;color:white;font-weight:700;margin-top:18px;cursor:pointer}
+    .sub{font-size:12px;color:#68788a;line-height:1.5}.route{background:#eaf3fb;border-radius:14px;padding:15px;margin-top:14px;line-height:1.55}
+    .map{height:210px;background:#edf1f5;border-radius:14px;position:relative;overflow:hidden;margin-top:12px;border:1px solid #d9e1e9}
+    .hall{position:absolute;background:#fff;border:2px solid #c8d3df;border-radius:8px}
+    .h1{left:7%;top:43%;width:86%;height:18%}.h2{left:41%;top:10%;width:18%;height:75%}
+    .room{position:absolute;background:#dceaf6;border:1px solid #9db8d0;border-radius:6px;font-size:10px;padding:5px;text-align:center}
+    .r1{left:7%;top:17%;width:30%;height:20%}.r2{right:7%;top:17%;width:30%;height:20%}.r3{left:7%;bottom:10%;width:30%;height:20%}.r4{right:7%;bottom:10%;width:30%;height:20%}
+    .pin{position:absolute;left:49%;top:47%;font-size:23px;z-index:2}
+    .hidden{display:none}.pill{display:inline-block;background:#e5f4eb;color:#17663b;border-radius:99px;padding:5px 9px;font-size:11px;font-weight:700}
+    footer{text-align:center;color:#758396;font-size:11px;padding:8px 20px 30px}
+  </style>
+</head>
+<body>
+<header><div class="brand"><div class="logo">➤</div><div><h1>WayFinder</h1><p>Find your way. Stress less.</p></div></div></header>
+<main>
+  <section class="card">
+    <span class="pill">DEMO PROTOTYPE</span>
+    <h2 style="margin:12px 0 4px">Where do you need to go?</h2>
+    <p class="sub">Try the sample hospital or school directory. Real navigation requires a verified floor plan from the building.</p>
+    <label for="building">Building type</label>
+    <select id="building"><option value="hospital">Hospital</option><option value="school">School</option></select>
+    <label for="start">Starting point</label>
+    <select id="start"><option>Main Entrance</option><option>Front Desk</option><option>Parking Entrance</option><option>Elevator</option></select>
+    <label for="floor">Floor</label>
+    <select id="floor"><option>Floor 1</option><option>Floor 2</option><option>Floor 3</option></select>
+    <label for="destination">Destination</label>
+    <select id="destination"></select>
+    <button id="go">Find my way</button>
+    <div id="result" class="route hidden" aria-live="polite"></div>
+  </section>
+  <section class="card">
+    <h3 style="margin:0">Sample floor map</h3>
+    <p class="sub">Illustrative only — not an actual building layout.</p>
+    <div class="map" aria-label="Illustrative floor plan">
+      <div class="hall h1"></div><div class="hall h2"></div>
+      <div class="room r1" id="room1">Room A</div><div class="room r2" id="room2">Room B</div>
+      <div class="room r3" id="room3">Room C</div><div class="room r4" id="room4">Room D</div>
+      <div class="pin">📍</div>
+    </div>
+  </section>
+</main>
+<footer>WayFinder prototype · Directions are examples, not verified navigation.</footer>
+<script>
+const hospital = {
+ "Emergency Room":"From the main entrance, go to the main hallway and follow the Emergency signs. Confirm the route with the front desk.",
+ "X-Ray / Imaging":"From the main entrance, ask the front desk for the Imaging corridor. Follow posted signs.",
+ "Laboratory":"Check in at the front desk and follow the posted Laboratory signs.",
+ "Cardiology":"Ask the front desk to confirm the Cardiology department and floor.",
+ "Restrooms":"Look for the nearest restroom signs along the public hallway.",
+ "Registration":"Continue to the main reception or registration desk."
+};
+const school = {
+ "Main Office":"From the main entrance, follow the office signs or check in at the reception desk.",
+ "Cafeteria":"Follow the posted cafeteria signs from the main hallway.",
+ "Gymnasium":"Follow the gym signs or ask the main office for the correct corridor.",
+ "Library":"Follow the library signs from the main hallway.",
+ "Room 101":"Check the room directory near the main entrance to confirm the classroom wing.",
+ "Auditorium":"Follow the auditorium signs from the main entrance."
+};
+const building=document.querySelector("#building"), dest=document.querySelector("#destination");
+function updatePlaces(){const data=building.value==="hospital"?hospital:school;dest.innerHTML="";Object.keys(data).forEach(name=>{const o=document.createElement("option");o.textContent=name;dest.appendChild(o)});document.querySelector("#room1").textContent=building.value==="hospital"?"Imaging":"Office";document.querySelector("#room2").textContent=building.value==="hospital"?"Lab":"Library";document.querySelector("#room3").textContent=building.value==="hospital"?"Cardiology":"Gym";document.querySelector("#room4").textContent=building.value==="hospital"?"ER":"Cafeteria";document.querySelector("#result").classList.add("hidden")}
+building.addEventListener("change",updatePlaces);updatePlaces();
+document.querySelector("#go").addEventListener("click",()=>{const data=building.value==="hospital"?hospital:school;const from=document.querySelector("#start").value;const floor=document.querySelector("#floor").value;const name=dest.value;const result=document.querySelector("#result");result.innerHTML="<strong>Route preview</strong><br>From "+from+" · "+floor+"<br><br>"+data[name]+"<br><br><span class='sub'>Demo guidance only. This is not a verified route. Ask building staff for urgent or safety-critical directions.</span>";result.classList.remove("hidden")});
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
+</script>
+</body></html>
